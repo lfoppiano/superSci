@@ -1,8 +1,10 @@
-# This script process JATS XML file and extract text as sentences.
-# It extracts every paragraphs (namely everything within <p>) and it excludes formulas, inlinde formulas and references
-# There is a small post-processing part, where all additional breaklines are removed.
-# After sentence split, all sentences with less than 2 tokens (split by space) are removed.
-# It uses Spacy segmenter for English to split paragraphs in sentences.
+# This script process JATS XML file and extract text as paragraphs.
+
+# It extracts paragraphs (namely everything within <p>), excluding
+# formulas, inline-formulas, references and other useless information.
+# There is minimal post-processing part, where all additional breadlines are removed
+
+# If the --output is specified the files are written keeping the input directory stucture
 
 ## Usage:
 #   python jats2text.py input_path [--output output_path] [--input_pattern _jats.xml]
@@ -15,20 +17,7 @@ import argparse
 import os
 from os import makedirs
 from os.path import isfile, join, relpath, basename, dirname
-
-import spacy
 from bs4 import BeautifulSoup
-
-nlp = spacy.load("en_core_web_sm", disable=['ner', 'tagger'])
-
-
-def split_in_sentences(text):
-    doc = nlp(text)
-    sents = []
-    for sent in doc.sents:
-        sents.append(str(sent))
-
-    return sents
 
 
 def remove_tags(soup, tag):
@@ -59,39 +48,28 @@ onlyfiles = [os.path.join(dp, f) for dp, dn, fn in os.walk(input_path) for f in 
 # input = open('/Users/lfoppiano/development/superconductors/supercon_papers/aip/072502_1/vor_1.5033353.xml')
 # input = open('/Users/lfoppiano/development/projects/embeddings/tmp/10.1063_1.4985098_jats.xml')
 
-print("Processing " + str(len(onlyfiles)))
+total_files = len(onlyfiles)
+print("Processing " + str(total_files) + " files. ")
+
+counter = 0
+
+# Remove tags
+ignored_tag = ['xref', 'disp-formula', 'inline-formula', 'ext-link', 'label']
+ignored_parents = ['author-comment']
 
 for input in onlyfiles:
 
     with open(input, 'r') as f:
         soup = BeautifulSoup(f, 'lxml')
 
-        # Remove tags
-        ignored_tag = ['xref', 'disp-formula', 'inline-formula']
-
         soup = remove_tags(soup, ignored_tag)
 
-        datas = []
-        # Collect
-        for paragraphs in soup.find_all('p'):
-            text = paragraphs.text.strip()
-            datas.append(text)
-
-        # Post-process
-        remove_ref_prefix = ['Figs. ', 'Fig. ', 'Ref. ', 'Refs. ', 'Sec. ', 'Secs. ', 'Eq. ', 'Eqs. ']
-
-        sentences = []
-        for text in datas:
-            for r in remove_ref_prefix:
-                text = text.replace(r, '')
-
-            text = text.replace("()", "").strip()
-            # text = text.replace("\n", "")
-            text = ' '.join(text.split())
-
-            for s in split_in_sentences(text):
-                if len(s.split(" ")) > 1:
-                    sentences.append(s)
+        paragraphs = []
+        # Collect and strip paragraphs and remove additionals breaklines
+        for paragraph in soup.find_all('p'):
+            if paragraph.parent.name not in ignored_parents:
+                text = paragraph.text.strip()
+                paragraphs.append(' '.join(text.split()))
 
         # Output
         if output_path_root is not None:
@@ -100,16 +78,20 @@ for input in onlyfiles:
 
             output_filename = basename(input).replace('.xml', '.txt')
             output_path = os.path.join(output_path_root, dirname(relative_path))
-            makedirs(output_path)
+            makedirs(output_path, exist_ok=True)
 
             output_file = os.path.join(output_path, output_filename)
 
             with open(output_file, 'w') as f_output:
-                for sentence in sentences:
-                    f_output.write(str(sentence))
-                    f_output.write('\n')
+                f_output.write(str(paragraph))
+                f_output.write('\n')
 
         else:
             print(input + "\n")
-            for sentence in sentences:
-                print(sentence)
+            for paragraph in paragraphs:
+                print(paragraph)
+            print("\n")
+
+    counter += 1
+    if counter % 10 == 0:
+        print("Progress (" + str(counter) + "/" + str(total_files) + "): " + str((counter / total_files) * 100))
