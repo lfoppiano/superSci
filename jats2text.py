@@ -15,6 +15,9 @@
 
 import argparse
 import os
+import time
+import timeit
+from datetime import timedelta
 from os import makedirs
 from os.path import isfile, join, relpath, basename, dirname
 from bs4 import BeautifulSoup
@@ -57,6 +60,7 @@ counter = 0
 ignored_tag = ['xref', 'disp-formula', 'inline-formula', 'ext-link', 'label']
 ignored_parents = ['author-comment']
 
+start = time.time()
 for input in onlyfiles:
 
     with open(input, 'r') as f:
@@ -65,7 +69,7 @@ for input in onlyfiles:
         soup = remove_tags(soup, ignored_tag)
 
         paragraphs = []
-        # Collect and strip paragraphs and remove additionals breaklines
+        # Collect and strip paragraphs and remove additional breaklines
         for paragraph in soup.find_all('p'):
             if paragraph.parent.name not in ignored_parents:
                 text = paragraph.text.strip()
@@ -83,8 +87,9 @@ for input in onlyfiles:
             output_file = os.path.join(output_path, output_filename)
 
             with open(output_file, 'w') as f_output:
-                f_output.write(str(paragraph))
-                f_output.write('\n')
+                for paragraph in paragraphs:
+                    f_output.write(str(paragraph))
+                    f_output.write('\n')
 
         else:
             print(input + "\n")
@@ -93,5 +98,8 @@ for input in onlyfiles:
             print("\n")
 
     counter += 1
-    if counter % 10 == 0:
-        print("Progress (" + str(counter) + "/" + str(total_files) + "): " + str((counter / total_files) * 100))
+    if counter % 10000 == 0:
+        end = time.time()
+        print("Progress ({}/{}) in ({} s): {}%".format(counter, total_files, (end - start),
+                                                       (counter / total_files) * 100))
+        start = time.time()
