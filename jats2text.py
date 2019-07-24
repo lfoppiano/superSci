@@ -15,6 +15,7 @@
 
 import argparse
 import os
+import sys
 import time
 import timeit
 from datetime import timedelta
@@ -102,4 +103,6 @@ for input in onlyfiles:
         end = time.time()
         print("Progress ({}/{}) in ({} s): {}%".format(counter, total_files, (end - start),
                                                        (counter / total_files) * 100))
+        sys.stdout.flush()
         start = time.time()
+
