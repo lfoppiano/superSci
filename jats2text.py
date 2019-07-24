@@ -13,13 +13,13 @@
 
 import argparse
 import os
-from os import mkdir, makedirs
-from os.path import isfile, join, commonpath, relpath, basename, dirname
+from os import makedirs
+from os.path import isfile, join, relpath, basename, dirname
 
 import spacy
 from bs4 import BeautifulSoup
 
-nlp = spacy.load("en_core_web_sm")
+nlp = spacy.load("en_core_web_sm", disable=['ner', 'tagger'])
 
 
 def split_in_sentences(text):
@@ -69,8 +69,7 @@ for input in onlyfiles:
         # Remove tags
         ignored_tag = ['xref', 'disp-formula', 'inline-formula']
 
-        for tag in ignored_tag:
-            soup = remove_tags(soup, tag)
+        soup = remove_tags(soup, ignored_tag)
 
         datas = []
         # Collect
@@ -85,6 +84,8 @@ for input in onlyfiles:
         for text in datas:
             for r in remove_ref_prefix:
                 text = text.replace(r, '')
+
+            text = text.replace("()", "").strip()
             # text = text.replace("\n", "")
             text = ' '.join(text.split())
 
