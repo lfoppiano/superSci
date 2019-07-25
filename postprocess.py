@@ -65,7 +65,6 @@ start = time.time()
 for file in file_list:
     name = basename(file)
 
-    print("Processing " + name)
 
     with open(file, 'r') as f:
         postprocessedLines = []
@@ -99,7 +98,7 @@ for file in file_list:
             print("\n")
 
     counter += 1
-    if counter % 10 == 0:
+    if counter % 10000 == 0:
         end = time.time()
         print("Progress ({}/{}) in ({} s): {}%".format(counter, total_files, (end - start),
                                                        (counter / total_files) * 100))
