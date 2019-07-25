@@ -45,13 +45,13 @@ if args.input_pattern is not None:
 else:
     input_pattern = 'xml'
 
-onlyfiles = [os.path.join(dp, f) for dp, dn, fn in os.walk(input_path) for f in fn if
+file_list = [os.path.join(dp, f) for dp, dn, fn in os.walk(input_path) for f in fn if
              f.lower().endswith(input_pattern) and isfile(join(dp, f))]
 
 # input = open('/Users/lfoppiano/development/superconductors/supercon_papers/aip/072502_1/vor_1.5033353.xml')
 # input = open('/Users/lfoppiano/development/projects/embeddings/tmp/10.1063_1.4985098_jats.xml')
 
-total_files = len(onlyfiles)
+total_files = len(file_list)
 print("Processing " + str(total_files) + " files. ")
 
 counter = 0
@@ -61,9 +61,9 @@ ignored_tag = ['xref', 'disp-formula', 'inline-formula', 'ext-link', 'label']
 ignored_parents = ['author-comment']
 
 start = time.time()
-for input in onlyfiles:
+for file in file_list:
 
-    with open(input, 'r') as f:
+    with open(file, 'r') as f:
         soup = BeautifulSoup(f, 'lxml')
 
         soup = remove_tags(soup, ignored_tag)
@@ -78,9 +78,9 @@ for input in onlyfiles:
         # Output
         if output_path_root is not None:
             # common_path = commonpath([input_path, output_path])
-            relative_path = relpath(input, input_path)
+            relative_path = relpath(file, input_path)
 
-            output_filename = basename(input).replace('.xml', '.txt')
+            output_filename = basename(file).replace('.xml', '.txt')
             output_path = os.path.join(output_path_root, dirname(relative_path))
             makedirs(output_path, exist_ok=True)
 
@@ -92,7 +92,7 @@ for input in onlyfiles:
                     f_output.write('\n')
 
         else:
-            print(input + "\n")
+            print(file + "\n")
             for paragraph in paragraphs:
                 print(paragraph)
             print("\n")

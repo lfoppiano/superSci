@@ -39,10 +39,10 @@ if args.input_pattern is not None:
 else:
     input_pattern = 'txt'
 
-onlyfiles = [os.path.join(dp, f) for dp, dn, fn in os.walk(input_path) for f in fn if
+file_list = [os.path.join(dp, f) for dp, dn, fn in os.walk(input_path) for f in fn if
              f.lower().endswith(input_pattern) and isfile(join(dp, f))]
 
-total_files = len(onlyfiles)
+total_files = len(file_list)
 
 nlp = spacy.load("en_core_web_sm", disable=['ner', 'tagger'])
 
@@ -62,7 +62,7 @@ remove_ref_prefix = [r'Figs?\. ', r'Refs?\. ', r'Secs?\. ', r'Eqs?\. ', r'Tables
 counter = 0
 start = time.time()
 
-for file in onlyfiles:
+for file in file_list:
     name = basename(file)
 
     print("Processing " + name)
@@ -81,9 +81,9 @@ for file in onlyfiles:
                     postprocessedLines.append(sentence)
 
         if output_path_root is not None:
-            relative_path = relpath(input, input_path)
+            relative_path = relpath(file, input_path)
 
-            output_filename = basename(input).replace('.txt', '.post.txt')
+            output_filename = basename(file).replace('.txt', '.post.txt')
             output_path = os.path.join(output_path_root, dirname(relative_path))
             os.makedirs(output_path, exist_ok=True)
 
