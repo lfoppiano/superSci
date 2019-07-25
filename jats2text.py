@@ -17,10 +17,9 @@ import argparse
 import os
 import sys
 import time
-import timeit
-from datetime import timedelta
 from os import makedirs
 from os.path import isfile, join, relpath, basename, dirname
+
 from bs4 import BeautifulSoup
 
 
