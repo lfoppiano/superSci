@@ -18,6 +18,8 @@
 import argparse
 import os
 import re
+import sys
+import time
 from os.path import isfile, join, basename, dirname, relpath
 
 import spacy
@@ -40,6 +42,8 @@ else:
 onlyfiles = [os.path.join(dp, f) for dp, dn, fn in os.walk(input_path) for f in fn if
              f.lower().endswith(input_pattern) and isfile(join(dp, f))]
 
+total_files = len(onlyfiles)
+
 nlp = spacy.load("en_core_web_sm", disable=['ner', 'tagger'])
 
 
@@ -52,7 +56,11 @@ def split_in_sentences(text):
     return sents
 
 
-remove_ref_prefix = [r'Figs?\. ', r'Refs?\. ', r'Secs?\. ', r'Eqs?\. ', r'Tables?\. ', r'\([-– ,]*\)', r'\[[-– ,]*\]', '(equation )']
+remove_ref_prefix = [r'Figs?\. ', r'Refs?\. ', r'Secs?\. ', r'Eqs?\. ', r'Tables?\. ', r'\([-– ,]*\)', r'\[[-– ,]*\]',
+                     r'\(equation \)']
+
+counter = 0
+start = time.time()
 
 for file in onlyfiles:
     name = basename(file)
@@ -91,3 +99,12 @@ for file in onlyfiles:
             for output_line in postprocessedLines:
                 print(output_line)
             print("\n")
+
+    counter += 1
+    if counter % 10 == 0:
+        end = time.time()
+        print("Progress ({}/{}) in ({} s): {}%".format(counter, total_files, (end - start),
+                                                       (counter / total_files) * 100))
+        print("\n")
+        sys.stdout.flush()
+        start = time.time()
